@@ -1,10 +1,12 @@
 const TOKEN_KEY = 'smartseason_token'
 
 /**
- * API base for production (`https://your-api.vercel.app`). Omit in dev so requests stay
- * same-origin and Vite proxies `/api` → http://localhost:4000 (see `vite.config.ts`).
+ * API base for production builds. In `npm run dev`, this is always ignored so every request
+ * stays on the Vite origin — `/api` is proxied to localhost:4000 with no cross-origin/CORS.
+ * (A `.env` with VITE_API_URL pointing at Vercel would otherwise break local login.)
  */
 function apiOrigin(): string {
+  if (import.meta.env.DEV) return ''
   const raw = import.meta.env.VITE_API_URL?.trim()
   if (!raw) return ''
   return raw.replace(/\/$/, '')
