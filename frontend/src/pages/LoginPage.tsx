@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth'
 import { useTheme } from '../theme'
@@ -13,6 +13,16 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [slowHint, setSlowHint] = useState(false)
+
+  useEffect(() => {
+    if (!busy) {
+      setSlowHint(false)
+      return
+    }
+    const t = window.setTimeout(() => setSlowHint(true), 8_000)
+    return () => window.clearTimeout(t)
+  }, [busy])
 
   if (!loading && user) {
     const to = (location.state as { from?: string } | null)?.from ?? '/'
@@ -71,6 +81,12 @@ export function LoginPage() {
             />
           </label>
           {error && <p className="error">{error}</p>}
+          {busy && slowHint && !import.meta.env.DEV && (
+            <p className="login-slow-hint" role="status">
+              Still working — the first sign-in after idle can take up to a minute on serverless (cold
+              start).
+            </p>
+          )}
           <button className="btn" type="submit" disabled={busy}>
             {busy ? 'Signing in…' : 'Sign in'}
           </button>

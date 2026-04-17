@@ -79,11 +79,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     sessionCheckRef.current?.abort()
     let res: { token: string; user: User }
+    // Vite dev server: short timeout + local help. Production build (Vercel, vite preview): long timeout + deploy help.
+    // Note: import.meta.env.PROD is false during `npm run dev` even if VITE_API_URL points at production API.
+    const loginMs = import.meta.env.DEV ? 22_000 : 90_000
     try {
       res = await api<{ token: string; user: User }>('/api/auth/login', {
         method: 'POST',
         json: { email, password },
-        signal: AbortSignal.timeout(22_000),
+        signal: AbortSignal.timeout(loginMs),
       })
     } catch (e) {
       // AbortSignal.timeout() often rejects with TimeoutError / "signal timed out", not AbortError.
@@ -94,8 +97,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name === 'TimeoutError' ||
         /signal timed out|timed out/i.test(msg)
       if (timedOut) {
+        if (import.meta.env.DEV) {
+          throw new Error(
+            'Sign-in timed out. Is the API running? In a terminal: cd backend && npm run dev (port 4000). If the port is stuck: lsof -ti :4000 | xargs kill -9 then npm run dev again.',
+          )
+        }
+        const hasApiUrl = Boolean(import.meta.env.VITE_API_URL?.trim())
         throw new Error(
-          'Sign-in timed out waiting for the API. In a terminal: cd backend && npm run dev. If it still hangs, run: lsof -ti :4000 | xargs kill -9 then start the API again.',
+          hasApiUrl
+            ? 'Sign-in timed out. The deployed API may be cold-starting (wait 1–2 minutes and retry) or overloaded. Check Vercel backend logs, DATABASE_URL, and JWT_SECRET.'
+            : 'Sign-in timed out. Add VITE_API_URL in the frontend Vercel project (Production and Preview) to your API URL, redeploy, then try again.',
         )
       }
       throw e
