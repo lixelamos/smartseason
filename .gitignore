@@ -1,0 +1,19 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+build
+
+# Secrets — never commit (keep .env.example tracked as a template)
+.env
+backend/.env
+frontend/.env
+
+# Local database
+*.db
+*.db-journal
+
+# OS / editor
+.DS_Store
+*.local

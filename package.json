@@ -1,0 +1,13 @@
+{
+  "name": "smartseason-shamba",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SmartSeason Field Monitoring — assessment monorepo",
+  "scripts": {
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED"
+}

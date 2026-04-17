@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String @id @default(cuid())
+  email        String @unique
+  passwordHash String
+  name         String
+  role         String // ADMIN | FIELD_AGENT
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  assignedFields Field[]       @relation("AssignedAgent")
+  fieldUpdates   FieldUpdate[]
+}
+
+model Field {
+  id           String   @id @default(cuid())
+  name         String
+  cropType     String
+  plantingDate DateTime
+  // Lifecycle: PLANTED → GROWING → READY → HARVESTED (see FIELD_STAGES in backend constants)
+  currentStage String   @default("PLANTED")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  assignedAgentId String?
+  assignedAgent   User?   @relation("AssignedAgent", fields: [assignedAgentId], references: [id], onDelete: SetNull)
+
+  updates FieldUpdate[]
+}
+
+model FieldUpdate {
+  id        String   @id @default(cuid())
+  fieldId   String
+  field     Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  stage     String?
+  note      String?
+  createdAt DateTime @default(now())
+}
