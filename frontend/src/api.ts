@@ -1,15 +1,19 @@
 const TOKEN_KEY = 'smartseason_token'
 
+/** Fallback when `VITE_API_URL` is missing from the build (common on Vercel Preview). Override via env for other deployments. */
+const DEFAULT_PRODUCTION_API_ORIGIN = 'https://smartseason-m3hv.vercel.app'
+
 /**
  * API base for production builds. In `npm run dev`, this is always ignored so every request
  * stays on the Vite origin — `/api` is proxied to localhost:4000 with no cross-origin/CORS.
- * (A `.env` with VITE_API_URL pointing at Vercel would otherwise break local login.)
+ * In production, prefer `VITE_API_URL`; otherwise use {@link DEFAULT_PRODUCTION_API_ORIGIN} so
+ * login hits the real API directly (avoids same-origin + edge rewrite issues that cause "Failed to fetch").
  */
 function apiOrigin(): string {
   if (import.meta.env.DEV) return ''
   const raw = import.meta.env.VITE_API_URL?.trim()
-  if (!raw) return ''
-  return raw.replace(/\/$/, '')
+  if (raw) return raw.replace(/\/$/, '')
+  return DEFAULT_PRODUCTION_API_ORIGIN
 }
 
 export function apiUrl(path: string): string {
@@ -43,7 +47,18 @@ export async function api<T>(
     headers['Content-Type'] = 'application/json'
     body = JSON.stringify(init.json)
   }
-  const res = await fetch(apiUrl(path), { ...init, headers, body })
+  let res: Response
+  try {
+    res = await fetch(apiUrl(path), { ...init, headers, body })
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    if (/failed to fetch|networkerror|load failed/i.test(msg)) {
+      throw new Error(
+        'Could not reach the API (network). If this is a deployed app, confirm the backend is up and CORS allows this site.',
+      )
+    }
+    throw e
+  }
   if (res.status === 204) {
     return undefined as T
   }
