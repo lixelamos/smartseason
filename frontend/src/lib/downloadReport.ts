@@ -1,4 +1,4 @@
-import { getToken } from '../api'
+import { apiUrl, getToken } from '../api'
 
 /** Pull plain text from Express HTML error pages (e.g. <pre>Cannot GET …</pre>). */
 function messageFromBody(text: string, status: number): string {
@@ -26,7 +26,8 @@ function buildReportUrl(path: string, format: ReportExportFormat): string {
   // Bust browser / dev-proxy caches so PDF/CSV always reflect the current API code.
   params.set('nc', String(Date.now()))
   const qs = params.toString()
-  return qs ? `${base}?${qs}` : base
+  const relative = qs ? `${base}?${qs}` : base
+  return apiUrl(relative)
 }
 
 function sniffNonPdfBody(u8: Uint8Array): string {

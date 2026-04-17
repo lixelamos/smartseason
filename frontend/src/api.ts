@@ -1,5 +1,22 @@
 const TOKEN_KEY = 'smartseason_token'
 
+/**
+ * API base for production (`https://your-api.vercel.app`). Omit in dev so requests stay
+ * same-origin and Vite proxies `/api` → http://localhost:4000 (see `vite.config.ts`).
+ */
+function apiOrigin(): string {
+  const raw = import.meta.env.VITE_API_URL?.trim()
+  if (!raw) return ''
+  return raw.replace(/\/$/, '')
+}
+
+export function apiUrl(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path
+  const origin = apiOrigin()
+  const p = path.startsWith('/') ? path : `/${path}`
+  return origin ? `${origin}${p}` : p
+}
+
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY)
 }
@@ -24,7 +41,7 @@ export async function api<T>(
     headers['Content-Type'] = 'application/json'
     body = JSON.stringify(init.json)
   }
-  const res = await fetch(path, { ...init, headers, body })
+  const res = await fetch(apiUrl(path), { ...init, headers, body })
   if (res.status === 204) {
     return undefined as T
   }
