@@ -8,7 +8,14 @@ import agentsRoutes from "./routes/agents";
 import reportsRoutes from "./routes/reports";
 
 const app = express();
-app.use(cors({ origin: true, credentials: true }));
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+    optionsSuccessStatus: 204,
+    maxAge: 86_400,
+  }),
+);
 app.use(express.json());
 
 app.get("/health", (_req, res) => {

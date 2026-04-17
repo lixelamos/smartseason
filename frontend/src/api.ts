@@ -1,19 +1,19 @@
 const TOKEN_KEY = 'smartseason_token'
 
-/** Fallback when `VITE_API_URL` is missing from the build (common on Vercel Preview). Override via env for other deployments. */
-const DEFAULT_PRODUCTION_API_ORIGIN = 'https://smartseason-m3hv.vercel.app'
-
 /**
- * API base for production builds. In `npm run dev`, this is always ignored so every request
- * stays on the Vite origin — `/api` is proxied to localhost:4000 with no cross-origin/CORS.
- * In production, prefer `VITE_API_URL`; otherwise use {@link DEFAULT_PRODUCTION_API_ORIGIN} so
- * login hits the real API directly (avoids same-origin + edge rewrite issues that cause "Failed to fetch").
+ * API base for production builds. In `npm run dev`, always '' (Vite proxy → localhost:4000).
+ *
+ * **Important:** When this is '' on a deployed site, requests go to the **same host** as the UI
+ * (e.g. `smartseason.vercel.app/api/...`). Vercel `vercel.json` rewrites `/api` to the real API.
+ * That avoids **cross-origin** calls — no CORS preflight (OPTIONS) that can hang on cold serverless.
+ *
+ * Set `VITE_API_URL` only if you intentionally call another origin (then the backend must allow CORS).
  */
 function apiOrigin(): string {
   if (import.meta.env.DEV) return ''
   const raw = import.meta.env.VITE_API_URL?.trim()
   if (raw) return raw.replace(/\/$/, '')
-  return DEFAULT_PRODUCTION_API_ORIGIN
+  return ''
 }
 
 export function apiUrl(path: string): string {
