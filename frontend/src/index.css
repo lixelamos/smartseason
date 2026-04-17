@@ -876,6 +876,13 @@ th {
   font-size: 0.9rem;
 }
 
+.login-slow-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
 .login-page {
   min-height: 100vh;
   display: flex;
