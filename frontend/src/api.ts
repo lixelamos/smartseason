@@ -4,17 +4,17 @@ const TOKEN_KEY = 'smartseason_token'
 const DEPLOYED_API_FALLBACK = 'https://smartseason-m3hv.vercel.app'
 
 /**
- * API base for production builds. In `npm run dev`, always '' (Vite proxy → localhost:4000).
+ * API base for requests.
  *
- * When '' on a deployed site, requests use the **same host** as the UI + `vercel.json` rewrite to the API.
- * If that still fails at the network layer, `api()` retries once against {@link DEPLOYED_API_FALLBACK}.
+ * Always use relative `/api` first:
+ * - local dev -> Vite proxy to localhost:4000
+ * - deployed frontend -> same-origin Vercel rewrite to backend
  *
- * Set `VITE_API_URL` to force a specific API origin (CORS must allow your frontend origin).
+ * This avoids cross-origin preflight for normal login requests.
+ * If same-origin fails at network level, `api()` retries once against
+ * {@link DEPLOYED_API_FALLBACK}.
  */
 function apiOrigin(): string {
-  if (import.meta.env.DEV) return ''
-  const raw = import.meta.env.VITE_API_URL?.trim()
-  if (raw) return raw.replace(/\/$/, '')
   return ''
 }
 
@@ -77,7 +77,7 @@ export async function api<T>(
       } catch (second) {
         throw new Error(
           `Could not reach the API. Same-origin request failed; direct request to ${DEPLOYED_API_FALLBACK} also failed. ` +
-            'Redeploy the frontend with root vercel.json (rewrites /api → backend), set VITE_API_URL to that API URL in Vercel, and confirm the backend project is running.',
+            'Redeploy the frontend with root vercel.json (rewrites /api → backend), and confirm the backend project is running.',
         )
       }
     } else if (isNetworkFailure(first)) {
