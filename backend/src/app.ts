@@ -29,3 +29,4 @@ app.use("/api/agents", agentsRoutes);
 app.use("/api/reports", reportsRoutes);
 
 export { app };
+export default app;
